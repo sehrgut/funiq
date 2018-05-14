@@ -27,13 +27,16 @@ void parseCommandLine(int argc, char** argv, std::string& filename, Settings& se
 		"When active, case differences do not contribute to edit distance.");
 	TCLAP::SwitchArg showAllSwitch(
 		"a","show-all",
-		"Will show all found duplicates");
+		"Will show all found duplicates when not in fast mode.");
 	TCLAP::SwitchArg showTotalsSwitch(
 		"c","show-counts",
 		"Precede each output line with the count of the number of times the line occurredin the input, followed by a single space.");
 	TCLAP::SwitchArg ignoreNonAlphaNumericSwitch(
 		"I","ignore-non-alpha-numeric",
 		"When active, non-alphanumeric characters do not contribute to edit distance.");
+	TCLAP::SwitchArg matchModeFastSwitch(
+		"F","fast",
+		"Operate in stream mode like uniq, only matching against the previous line. (Ignores -a)");
 	
 	cmd.add(filenameArg);
 	cmd.add(distanceArg);
@@ -41,6 +44,7 @@ void parseCommandLine(int argc, char** argv, std::string& filename, Settings& se
 	cmd.add(showAllSwitch);
 	cmd.add(showTotalsSwitch);
 	cmd.add(ignoreNonAlphaNumericSwitch);
+	cmd.add(matchModeFastSwitch);
 	cmd.parse(argc, argv);
 
 	settings.maxEditDistance = distanceArg.getValue();
@@ -48,6 +52,7 @@ void parseCommandLine(int argc, char** argv, std::string& filename, Settings& se
 	settings.showAllMatches	= showAllSwitch.getValue();
 	settings.showTotals = showTotalsSwitch.getValue();
 	settings.ignoreNonAlphaNumeric = ignoreNonAlphaNumericSwitch.getValue();
+	settings.matchModeFast = matchModeFastSwitch.getValue();
 	filename = filenameArg.getValue();	
 }
 
@@ -72,10 +77,10 @@ int main(int argc, char* argv[]) {
 		Matcher matcher(settings);
 		std::istream* inputStream = getInput(filename);		
 		for (std::string line; getline(*inputStream, line); ) {
-			matcher.add(line);
+			settings.matchModeFast ? matcher.fast_add(line, &std::cout) : matcher.add(line);
 		}
 
-		matcher.show(&std::cout);
+		settings.matchModeFast ? matcher.fast_end(&std::cout) : matcher.show(&std::cout);
 
 	} catch (TCLAP::ArgException &e) {
 		std::cerr << "An error occurred: ";

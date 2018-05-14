@@ -9,6 +9,7 @@ struct Settings
 		showAllMatches(false),
 		showTotals(false),
 		ignoreNonAlphaNumeric(false),
+		matchModeFast(false),
 		totalsFieldWidth(7){} // count-field width 7 used by GNU uniq
 
 	unsigned int maxEditDistance;
@@ -16,6 +17,7 @@ struct Settings
 	bool showAllMatches;
 	bool showTotals;
 	bool ignoreNonAlphaNumeric;
+	bool matchModeFast;
 	int totalsFieldWidth;
 };
 

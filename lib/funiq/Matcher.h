@@ -20,11 +20,19 @@ public:
 	~Matcher();
 	void add(std::string line);
 	void show(std::ostream* line);
+	void fast_add(std::string line, std::ostream* output);
+	void fast_end(std::ostream* output);
 private:
+	std::string fast_prev;
+	std::string fast_label;
+	int fast_count;
 	Settings& _settings;
 	StringListMap* matchMap;
 	void lowercase(std::string& s);
 	void removeNonAlphaNumeric(std::string& s);
+	void normalize(std::string& s);
+	bool is_match(std::string a, std::string b);
+	void fast_print(std::ostream* output);
 	unsigned int levenshteinDistance(const std::string& s1, const std::string& s2);
 };
 
@@ -36,20 +44,53 @@ Matcher::~Matcher() {
 	delete(matchMap);
 }
 
+bool Matcher::is_match(std::string a, std::string b) {
+	return (levenshteinDistance(a, b) <= _settings.maxEditDistance);
+}
+
+//todo: FastMatcher class
+void Matcher::fast_print(std::ostream* output) {
+	if(_settings.showTotals)
+		*output <<
+			std::setw(_settings.totalsFieldWidth) <<
+			fast_count << " ";
+	*output << fast_label;
+	*output << std::endl;
+}
+
+void Matcher::fast_add(std::string line, std::ostream* output) {
+	std::string cur = line;
+	normalize(cur);
+
+	if(is_match(cur, fast_prev)) {
+		fast_count++;
+	} else {
+		if (! fast_prev.empty())
+			fast_print(output);			
+		fast_count = 1;
+		fast_label = line;
+	}
+
+	fast_prev = cur;
+	
+}
+
+void Matcher::fast_end(std::ostream* output) {
+	fast_print(output);
+}
+
+
 void Matcher::add(std::string line) {
 	bool matchFound = false;
-	std::string normalizedLine = line;
-	if(_settings.caseInsensitive) lowercase(normalizedLine);
-	if(_settings.ignoreNonAlphaNumeric) removeNonAlphaNumeric(normalizedLine);
+	normalize(line);
 	for(auto matchPair : *matchMap) {
 		std::string key = matchPair.first;
-		std::string normalizedKey = key;
-		if(_settings.caseInsensitive) lowercase(normalizedKey);
-		if(_settings.ignoreNonAlphaNumeric) removeNonAlphaNumeric(normalizedKey);
+		normalize(key);
 		StringList* matchList = matchPair.second;	
-		if(levenshteinDistance(normalizedLine, normalizedKey) <= _settings.maxEditDistance) {
+				
+		if(is_match(line, key)) {
 			matchFound = true;
-			matchList->push_back(normalizedLine);
+			matchList->push_back(line);
 			continue;
 		}
 	}
@@ -89,6 +130,11 @@ void Matcher::removeNonAlphaNumeric(std::string& s) {
 	s.erase(std::remove_if(s.begin(), s.end(), [](const char& c){
                 return !std::isalnum(c);
               }), s.end());
+}
+
+void Matcher::normalize(std::string& s) {
+	if(_settings.caseInsensitive) lowercase(s);
+	if(_settings.ignoreNonAlphaNumeric) removeNonAlphaNumeric(s);
 }
 
 unsigned int Matcher::levenshteinDistance(const std::string& s1, const std::string& s2) {

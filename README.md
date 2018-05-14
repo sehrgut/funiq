@@ -39,7 +39,7 @@ Funiq can read from a file or have its input piped from stdin.
 
 	USAGE: 
 
-     funiq  [-c] [-a] [-i] [-I] [-d <integer>] [--] [--version] [-h]
+     funiq  [-c] [-a] [-i] [-I] [-F] [-d <integer>] [--] [--version] [-h]
                 <filename>
 
 
@@ -62,6 +62,10 @@ Funiq can read from a file or have its input piped from stdin.
 	   -d <integer>,  --distance <integer>
 	     Maximum edit distance between two strings to be considered a match.
 	     Default: 3
+
+	   -F,  --fast
+	     Operate in stream mode like uniq, only matching against the previous line.
+	     (Ignores -a)
 
 	   --,  --ignore_rest
 	     Ignores the rest of the labeled arguments following this flag.
