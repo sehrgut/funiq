@@ -37,7 +37,13 @@ void parseCommandLine(int argc, char** argv, std::string& filename, Settings& se
 	TCLAP::SwitchArg matchModeFastSwitch(
 		"F","fast",
 		"Operate in stream mode like uniq, only comparing against recent lines.");
-	
+	TCLAP::SwitchArg onlyOutputDuplicatesSwitch(
+		"d","only-duplicates",
+		"Only output lines that are repeated in the input.");
+	TCLAP::SwitchArg onlyOutputUniquesSwitch(
+		"u","only-uniques",
+		"Only output lines that are not repeated in the input.");
+
 	cmd.add(filenameArg);
 	cmd.add(distanceArg);
 	cmd.add(caseSwitch);
@@ -45,12 +51,16 @@ void parseCommandLine(int argc, char** argv, std::string& filename, Settings& se
 	cmd.add(showTotalsSwitch);
 	cmd.add(ignoreNonAlphaNumericSwitch);
 	cmd.add(matchModeFastSwitch);
+	cmd.add(onlyOutputDuplicatesSwitch);
+	cmd.add(onlyOutputUniquesSwitch);	
 	cmd.parse(argc, argv);
 
 	settings.maxEditDistance = distanceArg.getValue();
 	settings.caseInsensitive = caseSwitch.getValue();
 	settings.showAllMatches	= showAllSwitch.getValue();
 	settings.showTotals = showTotalsSwitch.getValue();
+	settings.onlyOutputDuplicates = onlyOutputDuplicatesSwitch.getValue();
+	settings.onlyOutputUniques = onlyOutputUniquesSwitch.getValue();
 	settings.ignoreNonAlphaNumeric = ignoreNonAlphaNumericSwitch.getValue();
 	settings.matchModeFast = matchModeFastSwitch.getValue();
 	filename = filenameArg.getValue();	

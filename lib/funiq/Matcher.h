@@ -139,18 +139,22 @@ void Matcher::show(std::ostream* output) {
 	for(auto matchPair : *matchMap) {
 		StringList v = *matchPair.second;
 		bool first = true;
-		for(std::string matchItem : v) {
-			if(first || _settings.showAllMatches) {
-				if(first && _settings.showTotals)
-					*output << 
-						std::setw(_settings.totalsFieldWidth) <<
-						v.size() << " "; // space for compatibility with GNU uniq
-				if(!first) *output << "\t";
-				*output << matchItem;
-				first = false;
+		if ( !(_settings.onlyOutputDuplicates || _settings.onlyOutputUniques) ||
+				(_settings.onlyOutputDuplicates && v.size() > 1) ||
+				(_settings.onlyOutputUniques && v.size() == 1)) {
+			for(std::string matchItem : v) {
+				if(first || _settings.showAllMatches) {
+					if(first && _settings.showTotals)
+						*output << 
+							std::setw(_settings.totalsFieldWidth) <<
+							v.size() << " "; // space for compatibility with GNU uniq
+					if(!first) *output << "\t";
+					*output << matchItem;
+					first = false;
+				}
+				*output << std::endl;
 			}
 		}
-		*output << std::endl;
 	}
 }
 
