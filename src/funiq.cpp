@@ -27,7 +27,7 @@ void parseCommandLine(int argc, char** argv, std::string& filename, Settings& se
 		"When active, case differences do not contribute to edit distance.");
 	TCLAP::SwitchArg showAllSwitch(
 		"a","show-all",
-		"Will show all found duplicates when not in fast mode.");
+		"Will show all found duplicates.");
 	TCLAP::SwitchArg showTotalsSwitch(
 		"c","show-counts",
 		"Precede each output line with the count of the number of times the line occurredin the input, followed by a single space.");
@@ -36,7 +36,7 @@ void parseCommandLine(int argc, char** argv, std::string& filename, Settings& se
 		"When active, non-alphanumeric characters do not contribute to edit distance.");
 	TCLAP::SwitchArg matchModeFastSwitch(
 		"F","fast",
-		"Operate in stream mode like uniq, only matching against the previous line. (Ignores -a)");
+		"Operate in stream mode like uniq, only comparing against recent lines.");
 	
 	cmd.add(filenameArg);
 	cmd.add(distanceArg);
@@ -69,7 +69,6 @@ std::istream* getInput(const std::string& filename) {
 int main(int argc, char* argv[]) {
 
 	try {
-
 		std::string filename;
 		Settings settings;
 		parseCommandLine(argc, argv, filename, settings);

@@ -14,6 +14,13 @@
 typedef std::vector<std::string> StringList;
 typedef std::map< std::string, StringList* > StringListMap;
 
+//todo: FastMatcher class
+struct fast_state {
+	std::string	prev;
+	std::string	label;
+	int			count;
+};
+
 class Matcher{
 public:
 	Matcher(Settings& settings);
@@ -23,16 +30,16 @@ public:
 	void fast_add(std::string line, std::ostream* output);
 	void fast_end(std::ostream* output);
 private:
-	std::string fast_prev;
-	std::string fast_label;
-	int fast_count;
+	struct fast_state fast;
 	Settings& _settings;
 	StringListMap* matchMap;
 	void lowercase(std::string& s);
 	void removeNonAlphaNumeric(std::string& s);
 	void normalize(std::string& s);
 	bool is_match(std::string a, std::string b);
-	void fast_print(std::ostream* output);
+	void fast_print_first(std::string line, std::ostream* output);
+	void fast_print_match(std::string line, std::ostream* output);
+	void fast_print_summary(std::ostream* output);
 	unsigned int levenshteinDistance(const std::string& s1, const std::string& s2);
 };
 
@@ -48,13 +55,27 @@ bool Matcher::is_match(std::string a, std::string b) {
 	return (levenshteinDistance(a, b) <= _settings.maxEditDistance);
 }
 
-//todo: FastMatcher class
-void Matcher::fast_print(std::ostream* output) {
-	if(_settings.showTotals)
-		*output <<
-			std::setw(_settings.totalsFieldWidth) <<
-			fast_count << " ";
-	*output << fast_label;
+void Matcher::fast_print_first(std::string line, std::ostream* output) {
+	if (_settings.showAllMatches)
+		*output << line << std::endl;
+}
+
+void Matcher::fast_print_match(std::string line, std::ostream* output) {
+	if (_settings.showAllMatches)
+		*output << "\t" << line << std::endl;
+}
+
+void Matcher::fast_print_summary(std::ostream* output) {
+	if (_settings.showAllMatches) {
+		if(_settings.showTotals)
+			*output << "Count: " << fast.count;
+	} else {
+		if(_settings.showTotals)
+			*output <<
+				std::setw(_settings.totalsFieldWidth) <<
+				fast.count << " ";
+		*output << fast.label;
+	}
 	*output << std::endl;
 }
 
@@ -62,21 +83,32 @@ void Matcher::fast_add(std::string line, std::ostream* output) {
 	std::string cur = line;
 	normalize(cur);
 
-	if(is_match(cur, fast_prev)) {
-		fast_count++;
+	if(is_match(cur, fast.prev)) {
+		fast_print_match(line, output);
+		fast.count++;
 	} else {
-		if (! fast_prev.empty())
-			fast_print(output);			
-		fast_count = 1;
-		fast_label = line;
-	}
+		if (! fast.prev.empty()) {
+			fast_print_summary(output);
+		}
+		fast_print_first(line, output);
+		fast.count = 1;
+		fast.label = line;
 
-	fast_prev = cur;
+		/*
+		Always match against the first member of a newly-discovered cluster. If matching
+		against the most recent member of a cluster, each subsequent line could up to
+		double the potential distance of a newly-added cluster member from the founding
+		member, growing clusters much larger than intended.
+		*/
+		fast.prev = cur;
+	}
 	
 }
 
 void Matcher::fast_end(std::ostream* output) {
-	fast_print(output);
+	if (! fast.prev.empty()) {
+		fast_print_summary(output);
+	}
 }
 
 
