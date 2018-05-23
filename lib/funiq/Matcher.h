@@ -16,7 +16,7 @@ typedef std::map< std::string, StringList* > StringListMap;
 
 //todo: FastMatcher class
 struct fast_state {
-	std::string	prev;
+	std::string	exemplar;
 	std::string	label;
 	int			count;
 };
@@ -79,15 +79,19 @@ void Matcher::fast_print_summary(std::ostream* output) {
 	*output << std::endl;
 }
 
+// todo: for -u/-d, fast_state will need to track whether a first match has been output,
+//       since for -u it needs to output only unique exemplars, and for -d -a it needs
+//       to only start outputting the list if a second is found.
+
 void Matcher::fast_add(std::string line, std::ostream* output) {
 	std::string cur = line;
 	normalize(cur);
 
-	if(is_match(cur, fast.prev)) {
+	if(is_match(cur, fast.exemplar)) {
 		fast_print_match(line, output);
 		fast.count++;
 	} else {
-		if (! fast.prev.empty()) {
+		if (! fast.exemplar.empty()) {
 			fast_print_summary(output);
 		}
 		fast_print_first(line, output);
@@ -100,13 +104,13 @@ void Matcher::fast_add(std::string line, std::ostream* output) {
 		double the potential distance of a newly-added cluster member from the founding
 		member, growing clusters much larger than intended.
 		*/
-		fast.prev = cur;
+		fast.exemplar = cur;
 	}
 	
 }
 
 void Matcher::fast_end(std::ostream* output) {
-	if (! fast.prev.empty()) {
+	if (! fast.exemplar.empty()) {
 		fast_print_summary(output);
 	}
 }

@@ -11,6 +11,7 @@
   * previous KEY! See comment in Matcher.h
 * How should -a work?
   * so far, print exemplar, then tab-indented copies below, then count-line if applicable
+* honor -u/-d
 
 # stats
 * number of comparisons
